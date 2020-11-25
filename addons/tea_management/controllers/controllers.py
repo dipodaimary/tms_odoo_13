@@ -129,4 +129,11 @@ class GetController(http.Controller):
         "rate" : 12.0
     }
 }
+
+{
+    "params" : {
+        "stg" : "My Company",
+        "quantity" : "1000"
+    }
+}
 '''
