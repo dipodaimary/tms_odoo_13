@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dryer_mouth_register_data,access.dryer_mouth_register.data,model_dryer_mouth_register_data,,1,1,1,1
+access_packing_register_data,access.packing_register.data,model_packing_register_data,,1,1,1,1
+access_price_table_data,access.price_table.data,model_price_table_data,,1,1,1,1
+access_tea_management_price_incentive_data,access.tea_management.price_incentive,model_tea_management_price_incentive,,1,1,1,1
