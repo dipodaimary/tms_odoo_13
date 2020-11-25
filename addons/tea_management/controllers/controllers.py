@@ -2,7 +2,7 @@ import logging
 from odoo import http
 from odoo.http import request
 import json
-
+from odoo.fields import Datetime as Dt
 
 _logger = logging.getLogger(__name__)
 class GetController(http.Controller):
@@ -90,6 +90,20 @@ class GetController(http.Controller):
         except:
             return 0.0
 
+    def create_incentive_entry(self, stg_name="My Company", expiry_date='2020-01-01',
+                               q_json_str="{'cuts' : {'20' : 1,'30' : 2,'50' : 3}}	",
+                               k_json_str="{'cuts' : {'1000' : 1,'1500' : 2,'2000' : 3}}",
+                               t_json_str="{'cuts':{'100':10,}}"):
+        contact = request.env['res.partner'].search([['name', '=', stg_name]])
+        request.env['tea_management.price_incentive'].create({
+            'seller': contact,
+            'expiry_date': Dt.to_datetime(expiry_date),
+            'Q': q_json_str,
+            'K': k_json_str,
+            'T': t_json_str,
+        })
+        request.env.cr.commit()
+
     @http.route('/get_q_incentive', type='json', auth='user')
     def get_q_incentive_api(self, **rec):
         stg = rec.get('stg', False)
@@ -116,6 +130,21 @@ class GetController(http.Controller):
             return {"incentive" : self.t_incentive(stg, distance)}
         except:
             return {"price": 0}
+
+    @http.route('/creat_price_incentive', type='json', auth='user')
+    def update_default_stg_price(self, **rec):
+        seller = rec.get('seller', False)
+        expiry_date = rec.get('expiry_date', False)
+        q_json_str = rec.get('q_json_str', False)
+        k_json_str = rec.get('k_json_str', False)
+        t_json_str = rec.get('t_json_str', False)
+        self.create_incentive_entry(stg_name=seller, expiry_date=expiry_date,
+                               q_json_str=q_json_str,
+                               k_json_str=k_json_str,
+                               t_json_str=t_json_str)
+        return {"message": "success"}
+
+
 '''
 /create_price
 {
@@ -134,6 +163,17 @@ class GetController(http.Controller):
     "params" : {
         "stg" : "My Company",
         "quantity" : "1000"
+    }
+}
+
+{
+    "jsonrpc" : "2.0",
+    "params" : {
+        "seller" : "My Company",
+        "expiry_date" : "2019-01-01",
+        "q_json_str" : "{'cuts' : {'20' : 1,'30' : 2,'50' : 3}}	",
+        "k_json_str" : "{'cuts' : {'1000' : 1,'1500' : 2,'2000' : 3}}"
+        "t_json_str" : "{'cuts':{'100':10,}}",
     }
 }
 '''
