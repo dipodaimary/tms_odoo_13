@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import fields, models, api, _
 from datetime import datetime
 
 class PriceIncentives(models.Model):
