@@ -63,7 +63,7 @@ class GetController(http.Controller):
         return {"price": price, "qu_inc": qu_inc, "qt_inc": qt_inc}
 
     def get_price_incentive_dict(self, stg_name='My Company'):
-        string_obj = request.env['tea_management.price_incentive'].search([['seller', '=', stg_name]])
+        string_obj = request.env['tea_management.price_incentive'].search([['seller.name', '=', stg_name]])
         q_dict = json.loads(string_obj.Q.replace('\t', '').replace('\n', '').replace("'", '"'))
         k_dict = json.loads(string_obj.K.replace('\t', '').replace('\n', '').replace("'", '"'))
         t_dict = json.loads(string_obj.T.replace('\t', '').replace('\n', '').replace("'", '"'))
