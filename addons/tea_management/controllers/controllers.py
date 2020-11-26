@@ -146,7 +146,7 @@ class GetController(http.Controller):
         except:
             return {"price": 0}
 
-    @http.route('/creat_price_incentive', type='json', auth='user')
+    @http.route('/create_price_incentive', type='json', auth='user')
     def update_default_stg_price(self, **rec):
         seller = rec.get('seller', False)
         expiry_date = rec.get('expiry_date', False)
