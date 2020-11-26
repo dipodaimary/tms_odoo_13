@@ -72,21 +72,36 @@ class GetController(http.Controller):
     def q_incentive(self, stg_name, quality):
         q_dict, k_dict, t_dict = self.get_price_incentive_dict(stg_name)
         try:
-            return q_dict['cuts'][str(quality)]
+            cuts = sorted(list(q_dict['cuts'].keys()))
+            cuts.append(str(quality))
+            cuts = sorted(cuts)
+            index = cuts.index(str(quality))
+            cut_final = cuts[index-1]
+            return q_dict['cuts'][str(cut_final)]
         except:
             return 0.0
 
     def k_incentive(self, stg_name, quantity):
         q_dict, k_dict, t_dict = self.get_price_incentive_dict(stg_name)
         try:
-            return k_dict['cuts'][str(quantity)]
+            cuts = sorted(list(k_dict['cuts'].keys()))
+            cuts.append(str(quantity))
+            cuts = sorted(cuts)
+            index = cuts.index(str(quantity))
+            cut_final = cuts[index - 1]
+            return k_dict['cuts'][str(cut_final)]
         except:
             return 0.0
 
     def t_incentive(self, stg_name, distance):
         q_dict, k_dict, t_dict = self.get_price_incentive_dict(stg_name)
         try:
-            return t_dict['cuts'][str(distance)]
+            cuts = sorted(list(t_dict['cuts'].keys()))
+            cuts.append(str(distance))
+            cuts = sorted(cuts)
+            index = cuts.index(str(distance))
+            cut_final = cuts[index - 1]
+            return t_dict['cuts'][str(cut_final)]
         except:
             return 0.0
 
