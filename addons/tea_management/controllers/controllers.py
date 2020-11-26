@@ -73,10 +73,13 @@ class GetController(http.Controller):
         q_dict, k_dict, t_dict = self.get_price_incentive_dict(stg_name)
         try:
             cuts = sorted(list(q_dict['cuts'].keys()))
-            cuts.append(str(quality))
-            cuts = sorted(cuts)
-            index = cuts.index(str(quality))
-            cut_final = cuts[index-1]
+            if str(quality) not in cuts:
+                cuts.append(str(quality))
+                cuts = sorted(cuts)
+                index = cuts.index(str(quality))
+                cut_final = cuts[index-1]
+            else:
+                cut_final = str(quality)
             return q_dict['cuts'][str(cut_final)]
         except:
             return 0.0
@@ -85,10 +88,13 @@ class GetController(http.Controller):
         q_dict, k_dict, t_dict = self.get_price_incentive_dict(stg_name)
         try:
             cuts = sorted(list(k_dict['cuts'].keys()))
-            cuts.append(str(quantity))
-            cuts = sorted(cuts)
-            index = cuts.index(str(quantity))
-            cut_final = cuts[index - 1]
+            if str(quantity) not in cuts:
+                cuts.append(str(quantity))
+                cuts = sorted(cuts)
+                index = cuts.index(str(quantity))
+                cut_final = cuts[index - 1]
+            else:
+                cut_final = str(quantity)
             return k_dict['cuts'][str(cut_final)]
         except:
             return 0.0
@@ -97,10 +103,13 @@ class GetController(http.Controller):
         q_dict, k_dict, t_dict = self.get_price_incentive_dict(stg_name)
         try:
             cuts = sorted(list(t_dict['cuts'].keys()))
-            cuts.append(str(distance))
-            cuts = sorted(cuts)
-            index = cuts.index(str(distance))
-            cut_final = cuts[index - 1]
+            if str(distance) not in cuts:
+                cuts.append(str(distance))
+                cuts = sorted(cuts)
+                index = cuts.index(str(distance))
+                cut_final = cuts[index - 1]
+            else:
+                cut_final = str(distance)
             return t_dict['cuts'][str(cut_final)]
         except:
             return 0.0
@@ -123,10 +132,12 @@ class GetController(http.Controller):
     def get_q_incentive_api(self, **rec):
         stg = rec.get('stg', False)
         quality = rec.get('quality', False)
+        print(stg)
+        print(quality)
         try:
-            return {"incentive" : self.q_incentive(stg, quality)}
+            return {"incentive": self.q_incentive(stg, quality)}
         except:
-            return {"price": 0}
+            return {"incentive": 0}
 
     @http.route('/get_k_incentive', type='json', auth='user')
     def get_k_incentive_api(self, **rec):
@@ -135,7 +146,7 @@ class GetController(http.Controller):
         try:
             return {"incentive" : self.k_incentive(stg, quantity)}
         except:
-            return {"price": 0}
+            return {"incentive": 0}
 
     @http.route('/get_t_incentive', type='json', auth='user')
     def get_t_incentive_api(self, **rec):
@@ -144,7 +155,7 @@ class GetController(http.Controller):
         try:
             return {"incentive" : self.t_incentive(stg, distance)}
         except:
-            return {"price": 0}
+            return {"incentive": 0}
 
     @http.route('/create_price_incentive', type='json', auth='user')
     def update_default_stg_price(self, **rec):
@@ -191,4 +202,15 @@ class GetController(http.Controller):
         "t_json_str" : "{'cuts':{'100':10,}}",
     }
 }
+
+#get incentive apis
+
+{
+    "jsonrpc" : "2.0",
+    "params" : {
+        "stg":"Test",
+        "distance" : "100"
+    }
+}
+
 '''
