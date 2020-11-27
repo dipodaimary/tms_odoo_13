@@ -28,6 +28,7 @@
         'views/packing_data.xml',
         'views/price_table.xml',
         'views/price_incentive.xml',
+        'views/serial_and_lot.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

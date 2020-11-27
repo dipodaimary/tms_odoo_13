@@ -54,6 +54,52 @@ class MrpDocumentRoute(http.Controller):
         request.env.cr.commit()
         return bom_bulk
 
+    def mo_production_tea_grades(self, bom_bulk_tea_grades=None, date=None):
+        product_refs = self.get_product_ids()
+        mo_bulk_form = Form(request.env['mrp.production'])
+        mo_bulk_form.product_id = product_refs['bp']
+        mo_bulk_form.bom_id = bom_bulk_tea_grades
+        mo_bulk_form.product_qty = bom_bulk_tea_grades.product_qty
+        mo_bulk_form.product_uom_id = request.env.ref("uom.product_uom_unit")
+        if date is not None:
+            mo_bulk_form.date_planned_start = Dt.to_datetime(date)
+        mo_bulk = mo_bulk_form.save()
+        mo_bulk.action_confirm()
+        mo_bulk.action_assign()
+        context = {"active_ids": [mo_bulk.id], "active_id": mo_bulk.id}
+        product_form = Form(request.env['mrp.product.produce'].with_context(context))
+        product_form.qty_producing = bom_bulk_tea_grades.product_qty
+        lot_bulk = request.env['stock.production.lot'].create(
+            {'product_id': product_refs['bp'].id, 'company_id': request.env.company.id})
+        product_form.finished_lot_id = lot_bulk
+        product_consume = product_form.save()
+        product_consume.do_produce()
+        mo_bulk.button_mark_done()
+        request.env.cr.commit()
+
+    def mo_production_with_lot(self, product=None, bom_object=None, qty_producing=1.0, date=None):
+        mo_bulk_form = Form(request.env['mrp.production'])
+        mo_bulk_form.product_id = product
+        mo_bulk_form.bom_id = bom_object
+        mo_bulk_form.product_qty = bom_object.product_qty
+        mo_bulk_form.product_uom_id = request.env.ref("uom.product_uom_unit")
+        if date is not None:
+            mo_bulk_form.date_planned_start = Dt.to_datetime(date)
+        mo_bulk = mo_bulk_form.save()
+        mo_bulk.action_confirm()
+        mo_bulk.action_assign()
+        context = {"active_ids": [mo_bulk.id], "active_id": mo_bulk.id}
+        product_form = Form(request.env['mrp.product.produce'].with_context(context))
+        product_form.qty_producing = bom_object.product_qty
+        lot_obj = request.env['stock.production.lot'].create(
+            {'product_id': product.id, 'company_id': request.env.company.id})
+        product_form.finished_lot_id = lot_obj
+        product_consume = product_form.save()
+        product_consume.do_produce()
+        mo_bulk.button_mark_done()
+        request.env.cr.commit()
+        return lot_obj
+
     def mo_production(self, bom_bulk=None):
         bulk = request.env['product.product'].search([['name', '=', 'Bulk']])
         mo_bulk_form = Form(request.env['mrp.production'])

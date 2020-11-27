@@ -7,7 +7,6 @@ class TestStockCommon(common.SavepointCase):
     @classmethod
     def setUpClass(cls):
         super(TestStockCommon, cls).setUpClass()
-
         cls.ProductObj = cls.env['product.product']
         cls.UomObj = cls.env['uom.uom']
         cls.PartnerObj = cls.env['res.partner']

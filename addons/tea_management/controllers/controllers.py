@@ -170,6 +170,81 @@ class GetController(http.Controller):
                                t_json_str=t_json_str)
         return {"message": "success"}
 
+    def move_lot(self, product_name='BP', lot_name='0000152', partner_name=None, picking_type_str='', location_A_str='', location_B_str=''):
+        location_A = request.env['stock.location'].search([['complete_name', '=', location_A_str]])
+        location_B = request.env['stock.location'].search([['complete_name', '=', location_B_str]])
+        picking_type = request.env['stock.picking.type'].search([('default_location_dest_id', '=', location_B.id), ('code', '=', 'incoming')])
+        product_obj = request.env['product.product'].search([['name', '=', product_name]])
+        unit = request.env.ref("uom.product_uom_unit")
+        picking_in = request.env['stock.picking'].create({
+            'picking_type_id': picking_type.id,
+            'location_id': location_A.id,
+            'location_dest_id': location_B.id
+        })
+        move = request.env['stock.move'].create({
+            'name': 'test',
+            'product_id': product_obj.id,
+            'product_uom_qty': 1.0,
+            'product_uom': unit.id,
+            'picking_id': picking_in.id,
+            'location_id': location_A.id,
+            'location_dest_id': location_B.id
+        })
+        if partner_name:
+            try:
+                partner_obj = request.env['res.partner'].search([['name', '=', partner_name]])
+                move.partner_id = partner_obj
+            except:
+                pass
+        picking_in.action_confirm()
+        if partner_name:
+            try:
+                partner_obj = request.env['res.partner'].search([['name', '=', partner_name]])
+                move.partner_id = partner_obj
+                picking_in.partner_id = partner_obj
+            except:
+                pass
+        lot = request.env['stock.production.lot'].search([['name', '=', lot_name]])
+        request.env['stock.move.line'].create({
+            'move_id': move.id,
+            'product_id': product_obj.id,
+            'product_uom_id': unit.id,
+            'location_id': location_A.id,
+            'location_dest_id': location_B.id,
+            'qty_done': 1.0,
+            'lot_id': lot.id,
+        })
+        picking_in.action_done()
+        self.update_serial_and_lot_entry(serial=lot_name, status=location_B.complete_name)
+        request.env.cr.commit()
+
+    def update_serial_and_lot_entry(self, **kwargs):
+        print(kwargs['serial'])
+        if kwargs['serial']:
+            entry_obj = request.env['tea_management.serial_and_lot'].search([['serial', '=', kwargs['serial']]])
+        elif kwargs['custom_serial']:
+            entry_obj = request.env['tea_management.serial_and_lot'].search(
+                [['custom_serial', '=', kwargs['custom_serial']]])
+        update_dict = {}
+        for k, w in kwargs.items():
+            if k in ['custom_serial', 'product_name', 'quantity_in_lot', 'status']:
+                update_dict[k] = w
+        print(update_dict)
+        entry_obj.write(update_dict)
+        request.env.cr.commit()
+
+    @http.route('/move_lot', type='json', auth='user')
+    def move_lot_api(self, **rec):
+        self.move_lot(
+            product_name=rec['product_name'],
+            lot_name=rec['lot_name'],
+            partner_name=rec['partner_name'],
+            picking_type_str=rec['picking_type'],
+            location_A_str=rec['location_A'],
+            location_B_str=rec['location_B']
+            )
+        return {"message": "success"}
+
 
 '''
 /create_price
@@ -210,6 +285,30 @@ class GetController(http.Controller):
     "params" : {
         "stg":"Test",
         "distance" : "100"
+    }
+}
+
+{
+    "jsonrpc": "2.0",
+    "params" : {
+        "product_name" : "BP",
+        "lot_name" : "0000003",
+        "partner_name" : "Test",
+        "picking_type" : "My Company: TSPT_RECEPITS",
+        "location_A" : "WH/Stock",
+        "location_B" : "TSPT"
+    }
+}
+
+{
+    "jsonrpc": "2.0",
+    "params" : {
+        "product_name" : "BP",
+        "lot_name" : "0000004",
+        "partner_name" : "Test",
+        "picking_type" : "My Company: DSPT_RECEIPT",
+        "location_A" : "TSPT",
+        "location_B" : "DSPT"
     }
 }
 
