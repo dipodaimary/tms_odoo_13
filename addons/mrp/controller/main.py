@@ -77,7 +77,7 @@ class MrpDocumentRoute(http.Controller):
         mo_bulk.button_mark_done()
         request.env.cr.commit()
 
-    def mo_production_with_lot(self, product=None, bom_object=None, qty_producing=1.0, date=None):
+    def mo_production_with_lot(self, product=None, bom_object=None, date=None):
         mo_bulk_form = Form(request.env['mrp.production'])
         mo_bulk_form.product_id = product
         mo_bulk_form.bom_id = bom_object
@@ -97,6 +97,8 @@ class MrpDocumentRoute(http.Controller):
         product_consume = product_form.save()
         product_consume.do_produce()
         mo_bulk.button_mark_done()
+        request.env['tea_management.serial_and_lot'].create({'serial': lot_obj.name, 'product_name': product.name,
+                                                             'quantity_in_lot': bom_object.bom_line_ids[0].product_qty})
         request.env.cr.commit()
         return lot_obj
 
@@ -185,6 +187,17 @@ class MrpDocumentRoute(http.Controller):
                 self.mo_production(bom_bulk)
                 args = {'success': True, 'message': 'Success'}
         return args
+
+    @http.route('/create_mo_lot', type='json', auth='user')
+    def create_mo(self, **rec):
+        if request.jsonrequest:
+            if rec['product']:
+                bp = request.env['product.product'].search([['name', '=', rec['product']]])
+                bp_bom = request.env['mrp.bom'].search([['product_tmpl_id.name', '=', rec['product']]])
+                lot_produced = self.mo_production_with_lot(product=bp, bom_object=bp_bom)
+                args = {'success': True, 'message': 'Success'}
+        return args
+
 
     @http.route('/create_picking', type='json', auth='user')
     def create_picking(self, **rec):
