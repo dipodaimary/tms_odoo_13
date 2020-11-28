@@ -188,6 +188,21 @@ class MrpDocumentRoute(http.Controller):
                 args = {'success': True, 'message': 'Success'}
         return args
 
+    def update_serial_and_lot_entry(self, **kwargs):
+        print(kwargs['serial'])
+        if kwargs['serial']:
+            entry_obj = request.env['tea_management.serial_and_lot'].search([['serial', '=', kwargs['serial']]])
+        elif kwargs['custom_serial']:
+            entry_obj = request.env['tea_management.serial_and_lot'].search(
+                [['custom_serial', '=', kwargs['custom_serial']]])
+        update_dict = {}
+        for k, w in kwargs.items():
+            if k in ['custom_serial', 'product_name', 'quantity_in_lot', 'status']:
+                update_dict[k] = w
+        print(update_dict)
+        entry_obj.write(update_dict)
+        request.env.cr.commit()
+
     @http.route('/create_mo_lot', type='json', auth='user')
     def create_mo(self, **rec):
         if request.jsonrequest:
@@ -195,6 +210,7 @@ class MrpDocumentRoute(http.Controller):
                 bp = request.env['product.product'].search([['name', '=', rec['product']]])
                 bp_bom = request.env['mrp.bom'].search([['product_tmpl_id.name', '=', rec['product']]])
                 lot_produced = self.mo_production_with_lot(product=bp, bom_object=bp_bom)
+                self.update_serial_and_lot_entry(serial=lot_produced.name, custom_serial=rec['invoice_number'])
                 args = {'success': True, 'message': 'Success'}
         return args
 
