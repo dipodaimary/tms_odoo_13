@@ -245,6 +245,18 @@ class GetController(http.Controller):
             )
         return {"message": "success"}
 
+    @http.route('/get_product_list', type='json', auth='user')
+    def get_product_list_api(self, **rec):
+        products = [x.name for x in request.env['product.product'].search([])]
+        return {"products": products}
+
+    @http.route('/get_location_wise_lot_and_quantity', type='json', auth='user')
+    def get_location_wise_lot_and_quantity_api(self, **rec):
+        product = rec['product']
+        location = rec['location']
+        quant_available = []
+        [quant_available.append({"product" : x.display_name, "location" : x.location_id.complete_name, "lot_id" : x.lot_id.name, "quantity": x.quantity}) for x in request.env['stock.quant'].search([['quantity', '>', 0]])]
+        return {"stock" : [x for x in quant_available if x['product']==product and x['location']==location]}
 
 '''
 /create_price
