@@ -10,6 +10,7 @@ from odoo import http, _, exceptions
 from odoo.http import request
 from odoo.tools.translate import _
 from odoo.tests import Form
+from odoo.fields import Datetime as Dt
 
 logger = logging.getLogger(__name__)
 
@@ -234,7 +235,7 @@ class MrpDocumentRoute(http.Controller):
             if rec['product']:
                 bp = request.env['product.product'].search([['name', '=', rec['product']]])
                 bp_bom = request.env['mrp.bom'].search([['product_tmpl_id.name', '=', rec['product']]])
-                lot_produced = self.mo_production_with_lot(product=bp, bom_object=bp_bom)
+                lot_produced = self.mo_production_with_lot(product=bp, bom_object=bp_bom, date=rec['date'])
                 self.update_serial_and_lot_entry(serial=lot_produced.name, custom_serial=rec['invoice_number'])
                 args = {'success': True, 'message': 'Success'}
         return args
