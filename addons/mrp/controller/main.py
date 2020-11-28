@@ -188,6 +188,31 @@ class MrpDocumentRoute(http.Controller):
                 args = {'success': True, 'message': 'Success'}
         return args
 
+    def mo_production_with_lot(self, product=None, bom_object=None, date=None):
+        mo_bulk_form = Form(request.env['mrp.production'])
+        mo_bulk_form.product_id = product
+        mo_bulk_form.bom_id = bom_object
+        mo_bulk_form.product_qty = bom_object.product_qty
+        mo_bulk_form.product_uom_id = request.env.ref("uom.product_uom_unit")
+        if date is not None:
+            mo_bulk_form.date_planned_start = Dt.to_datetime(date)
+        mo_bulk = mo_bulk_form.save()
+        mo_bulk.action_confirm()
+        mo_bulk.action_assign()
+        context = {"active_ids": [mo_bulk.id], "active_id": mo_bulk.id}
+        product_form = Form(request.env['mrp.product.produce'].with_context(context))
+        product_form.qty_producing = bom_object.product_qty
+        lot_obj = request.env['stock.production.lot'].create(
+            {'product_id': product.id, 'company_id': request.env.company.id})
+        product_form.finished_lot_id = lot_obj
+        product_consume = product_form.save()
+        product_consume.do_produce()
+        mo_bulk.button_mark_done()
+        request.env['tea_management.serial_and_lot'].create({'serial': lot_obj.name, 'product_name': product.name,
+                                                             'quantity_in_lot': bom_object.bom_line_ids[0].product_qty})
+        request.env.cr.commit()
+        return lot_obj
+
     def update_serial_and_lot_entry(self, **kwargs):
         print(kwargs['serial'])
         if kwargs['serial']:
@@ -204,7 +229,7 @@ class MrpDocumentRoute(http.Controller):
         request.env.cr.commit()
 
     @http.route('/create_mo_lot', type='json', auth='user')
-    def create_mo(self, **rec):
+    def create_mo_lot(self, **rec):
         if request.jsonrequest:
             if rec['product']:
                 bp = request.env['product.product'].search([['name', '=', rec['product']]])
